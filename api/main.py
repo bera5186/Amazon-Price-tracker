@@ -29,47 +29,69 @@ class CreateUser(Resource):
     def post(self):
 
         """
-        Create a product request in a database
+        Create a user in a database
         
         """
         postedData = request.get_json()
         email = postedData["email"]
         userName = postedData["username"]
         password = postedData["password"]
-        #productLink = postedData["link"]
-        #price = 20
-        
-        hashedPassword = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
-        # productDocument = {
-        #     "email" : email,
-        #     "productlink" : productLink
-            
-        # }
+        checkedEmail = usersCollection.find_one({'email' : email})
 
-        userDocument = {
-            "email" : email,
-            "password" : hashedPassword,
-            "username" : userName
+        if checkedEmail is None:
+            hashedPassword = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt(8))
 
-        }
+            userDocument = {
+                "email" : email,
+                "password" : hashedPassword,
+                "username" : userName
 
-        
-        #productCollection.insert_one(productDocument)
-        usersCollection.insert_one(userDocument)
+            }
 
-        try:
+            usersCollection.insert_one(userDocument)
+
+            try:
+                js = json.dumps({
+                    "message" : "User succesfully created",
+                    "success" : True
+                })
+                response = Response(js, status=200, mimetype='application/json')
+            except:
+                js = json.dumps({
+                    "message" : "Cannot create a user",
+                    "success" : False
+                })
+                response = Response(js, status=500, mimetype='application/json')
+
+            return response
+        else:
             js = json.dumps({
-                "message" : "User succesfully created"
+                "message" : "Email already taken",
+                "success" : False
             })
-            response = Response(js, status=200, mimetype='application/json')
-        except:
-            js = json.dumps({
-                "message" : "Cannot create a user"
-            })
-            response = Response(js, status=500, mimetype='application/json')
-      
-        return response
+
+            response = Response(js, status=400, mimetype='application/json')
+            return response
+        
+
+        
+        
+
+
+class GetUser(Resource):
+    def get(self):
+        """
+        Check for a user in database
+        
+        """
+
+        postedData = request.get_json()
+        email = postedData["email"]
+        password = postedData["password"]
+
+
+
 
 
 
