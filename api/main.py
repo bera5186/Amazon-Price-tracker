@@ -56,7 +56,7 @@ class CreateUser(Resource):
                     "message" : "User succesfully created",
                     "success" : True
                 })
-                response = Response(js, status=200, mimetype='application/json')
+                response = Response(js, status=201, mimetype='application/json')
             except:
                 js = json.dumps({
                     "message" : "Cannot create a user",
@@ -90,12 +90,38 @@ class GetUser(Resource):
         email = postedData["email"]
         password = postedData["password"]
 
+        dbEmail = usersCollection.find_one({'email': email})
 
+        if dbEmail is None:
+            js = json.dumps({
+                "message" : "Incorrect Email or Password",
+                "success" : False
+            })
 
+            reponse = Response(js, status=404, mimetype='application/json')
+            return reponse
+        else:
+            if bcrypt.hashpw(password.encode('utf-8'), dbEmail['password']) == dbEmail['password']:
+                js = json.dumps({
+                    "message" : "successfully logged in",
+                    "sucess" : True
+                })
 
+                response = Response(js, status=200, mimetype='application/json')
+                return response
+
+            else:
+                js = json.dumps({
+                    "message" : "Incorrect email or password",
+                    "sucess " : False
+                })
+
+                response = Response(js, status=404, mimetype='application/json')
+                return response
 
 
 api.add_resource(CreateUser, "/signup")
+api.add_resource(GetUser, "/signin")
 
 
 @app.route('/')
@@ -105,6 +131,3 @@ def home():
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-
-
