@@ -67,20 +67,6 @@ class CreateUser(Resource):
             return response
 
 
-class Sum(Resource):
-    def get(self):
-
-        postedData = request.get_json()
-        x = postedData["x"]
-        y = postedData["y"]
-
-        sum = int(x) + int(y)
-
-        js = json.dumps({"sum": sum})
-
-        response = Response(js, status=200, mimetype="application/json")
-        return response
-
 
 class GetUserForLogin(Resource):
     def get(self):
@@ -152,15 +138,51 @@ class GetUserName(Resource):
             return response
 
 
+class CreateProduct(Resource):
+    def post(self):
+        
+        """
+        API endpoint to create a product of a user
+        
+        """
+
+        postedData = request.get_json()
+        email = postedData['email']
+        link = postedData['link']
+        price = postedData['price']
+
+        user = usersCollection.find_one({"email": email})
+
+        if user:
+
+            productDocument = {
+                'email' : email, 
+                'link' : link, 
+                'price' : price
+            }
+            productCollection.insert_one(productDocument)
+
+            js = json.dumps({'message' : 'Product created succesfully', 'success': True})
+            response = Response(js, status=200, mimetype="application/json")
+            return response
+
+        else :
+            js = json.dumps({'message' : 'User not found', 'success': False})
+            response = Response(js, status=403, mimetype="application/json")
+            return response
+
+
+
+
 api.add_resource(CreateUser, "/signup")
 api.add_resource(GetUserForLogin, "/signin")
 api.add_resource(GetUserName, "/getuser")
-api.add_resource(Sum, "/sum")
+api.add_resource(CreateProduct, "/createproduct")
 
 
 @app.route("/")
 def home():
-    return "hello world"
+    return "Welcome to API Home"
 
 
 if __name__ == "__main__":
